@@ -1,0 +1,40 @@
+% Given parameters
+L = 0.3; % Thickness of slab in meters
+alpha = 1.17e-4; % Thermal diffusivity in m^2/s
+T0 = 225.0; % Initial temperature in °C
+Ts = 25.0; % Temperature at boundary in °C
+dx = 0.015; % Space increment in meters
+dt = 60; % Time increment in seconds
+time = 300; % Final time in seconds
+
+% Calculate numerical parameters
+Nx = L/dx + 1; % Number of nodes
+Nt = time/dt + 1; % Number of time steps
+s_f = alpha*dt/(dx^2); % Stability parameter
+
+% Initialize temperature matrix
+T = ones(Nx,Nt)*T0; % Set all temperatures to initial value
+
+% Set boundary condition
+T(1,:) = Ts;
+
+% Apply implicit finite-difference method
+for n = 2:Nt
+    A = diag((1+2*s_f)*ones(Nx-2,1)) + diag(-s_f*ones(Nx-3,1),1) + diag(-s_f*ones(Nx-3,1),-1); % Coefficient matrix
+    b = T(2:Nx-1,n-1); % Right-hand side vector
+    b(1) = b(1) + s_f*T(1,n); % Include boundary condition
+    T(2:Nx-1,n) = A\b; % Solve system of equations
+end
+
+% Calculate temperature at 150 mm and 300 mm from the surface after 5 minutes
+x1 = 0.15; % Position in meters
+x2 = 0.3; % Position in meters
+i1 = round(x1/dx) + 1; % Node index
+i2 = round(x2/dx) + 1; % Node index
+j_final = Nt; % Index of final time step
+T1_final = T(i1,j_final); % Temperature at 150 mm from surface
+T2_final = T(i2,j_final); % Temperature at 300 mm from surface
+
+% Display results
+disp(['Temperature at 150 mm from surface after 5 minutes: ', num2str(T1_final), ' °C'])
+disp(['Temperature at 300 mm from surface after 5 minutes: ', num2str(T2_final), ' °C'])
